@@ -15,9 +15,6 @@ class WeatherScreen extends StatefulWidget {
 }
 
 class _WeatherScreenState extends State<WeatherScreen> {
-  double temp = 0;
-  var isLoading = false;
-
   @override
   void initState() {
     super.initState();
@@ -29,31 +26,21 @@ class _WeatherScreenState extends State<WeatherScreen> {
     return celcius;
   }
 
-  Future getCurrentWeather() async {
+  Future<Map<String, dynamic>> getCurrentWeather() async {
     try {
-      setState(() {
-        isLoading = true;
-      });
       final response = await http.get(
         Uri.parse(
           'https://api.openweathermap.org/data/2.5/forecast?q=London,uk&APPID=$apiKey',
         ),
       );
       final responseData = jsonDecode(response.body);
-      if (response.statusCode == 200) {
-        setState(() {
-          temp = responseData['list'][0]['main']['temp'];
-          print(temp);
-        });
-        setState(() {
-          isLoading = false;
-        });
+      if (responseData['cod'] != '200') {
+        throw 'An unexpected error occured!!!';
       }
-    } catch (error) {
-      print('Something went wrong! ${error.toString()}');
-      setState(() {
-        isLoading = false;
-      });
+
+      return responseData;
+    } catch (e) {
+      throw 'An unexpected error occured!!!';
     }
   }
 
@@ -69,107 +56,121 @@ class _WeatherScreenState extends State<WeatherScreen> {
           ),
         ],
       ),
-      body: isLoading
-          ? const Center(
+      body: FutureBuilder(
+        future: getCurrentWeather(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
               child: CircularProgressIndicator(),
-            )
-          : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      height: 235,
-                      width: double.infinity,
-                      child: Card(
-                        elevation: 5,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Text(
-                                  '${kelvinToCelcius(temp).toInt()}° C',
-                                  style: const TextStyle(fontSize: 50),
-                                ),
-                                const Icon(Icons.cloud, size: 70),
-                                const Text(
-                                  'Rain',
-                                  style: TextStyle(fontSize: 25),
-                                ),
-                              ],
-                            ),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(snapshot.error.toString()),
+            );
+          }
+
+          final currentWeatherData = snapshot.data!['list'][0];
+          final currentTemperature = currentWeatherData['main']['temp'];
+
+          return SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: 235,
+                    width: double.infinity,
+                    child: Card(
+                      elevation: 5,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Text(
+                                '${kelvinToCelcius(currentTemperature).toInt()}° C',
+                                style: const TextStyle(fontSize: 50),
+                              ),
+                              const Icon(Icons.cloud, size: 70),
+                              const Text(
+                                'Rain',
+                                style: TextStyle(fontSize: 25),
+                              ),
+                            ],
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Weather Forecast',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 20),
-                    const SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          HourlyForecast(
-                              hour: '03:00',
-                              icon: Icons.cloud,
-                              temperature: '25 C'),
-                          HourlyForecast(
-                              hour: '03:00',
-                              icon: Icons.cloud,
-                              temperature: '25 C'),
-                          HourlyForecast(
-                              hour: '03:00',
-                              icon: Icons.cloud,
-                              temperature: '25 C'),
-                          HourlyForecast(
-                              hour: '03:00',
-                              icon: Icons.cloud,
-                              temperature: '25 C'),
-                          HourlyForecast(
-                              hour: '03:00',
-                              icon: Icons.cloud,
-                              temperature: '25 C'),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Additional Information',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                    ),
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Weather Forecast',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 20),
+                  const SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
                       children: [
-                        AdditionalInformation(
-                            icon: Icons.water_drop,
-                            title: 'Humadity',
-                            value: '82%'),
-                        AdditionalInformation(
-                            icon: Icons.air,
-                            title: 'Wind Speed',
-                            value: '123.56'),
-                        AdditionalInformation(
-                            icon: Icons.sunny,
-                            title: 'UV Index',
-                            value: '123.56'),
+                        HourlyForecast(
+                            hour: '03:00',
+                            icon: Icons.cloud,
+                            temperature: '25 C'),
+                        HourlyForecast(
+                            hour: '03:00',
+                            icon: Icons.cloud,
+                            temperature: '25 C'),
+                        HourlyForecast(
+                            hour: '03:00',
+                            icon: Icons.cloud,
+                            temperature: '25 C'),
+                        HourlyForecast(
+                            hour: '03:00',
+                            icon: Icons.cloud,
+                            temperature: '25 C'),
+                        HourlyForecast(
+                            hour: '03:00',
+                            icon: Icons.cloud,
+                            temperature: '25 C'),
                       ],
-                    )
-                  ],
-                ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Additional Information',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                  ),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      AdditionalInformation(
+                          icon: Icons.water_drop,
+                          title: 'Humadity',
+                          value: '82%'),
+                      AdditionalInformation(
+                          icon: Icons.air,
+                          title: 'Wind Speed',
+                          value: '123.56'),
+                      AdditionalInformation(
+                          icon: Icons.sunny,
+                          title: 'UV Index',
+                          value: '123.56'),
+                    ],
+                  )
+                ],
               ),
             ),
+          );
+        },
+      ),
     );
   }
 }
