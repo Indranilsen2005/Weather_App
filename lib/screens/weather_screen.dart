@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 import 'package:weather_app/widgets/additional_information.dart';
 import 'package:weather_app/widgets/hourly_forecast.dart';
@@ -51,7 +52,9 @@ class _WeatherScreenState extends State<WeatherScreen> {
         title: const Text('Weather App'),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              setState(() {});
+            },
             icon: const Icon(Icons.refresh),
           ),
         ],
@@ -73,6 +76,11 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
           final currentWeatherData = snapshot.data!['list'][0];
           final currentTemperature = currentWeatherData['main']['temp'];
+          final currentFeelsLikeTemperature =
+              currentWeatherData['main']['feels_like'];
+          final currentWeatherDescription =
+              currentWeatherData['weather'][0]['description'];
+          final currentSky = currentWeatherData['weather'][0]['main'];
 
           return SingleChildScrollView(
             child: Padding(
@@ -80,8 +88,13 @@ class _WeatherScreenState extends State<WeatherScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const Text(
+                    'London',
+                    style: TextStyle(fontSize: 35),
+                  ),
+                  const SizedBox(height: 10),
                   SizedBox(
-                    height: 235,
+                    height: 200,
                     width: double.infinity,
                     child: Card(
                       elevation: 5,
@@ -92,19 +105,28 @@ class _WeatherScreenState extends State<WeatherScreen> {
                         borderRadius: BorderRadius.circular(20),
                         child: BackdropFilter(
                           filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Text(
-                                '${kelvinToCelcius(currentTemperature).toInt()}° C',
-                                style: const TextStyle(fontSize: 50),
+                          child: Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: ListTile(
+                              title: Text(
+                                '${kelvinToCelcius(currentTemperature).toInt()}°',
+                                style: const TextStyle(
+                                    fontSize: 90,
+                                    fontFamily: 'Times new roman'),
                               ),
-                              const Icon(Icons.cloud, size: 70),
-                              const Text(
-                                'Rain',
-                                style: TextStyle(fontSize: 25),
+                              subtitle: Text(
+                                'Feels like ${kelvinToCelcius(currentFeelsLikeTemperature).toInt()}°\n$currentWeatherDescription',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                ),
                               ),
-                            ],
+                              trailing: Icon(
+                                currentSky == 'Clouds' || currentSky == 'Rain'
+                                    ? Icons.cloud
+                                    : Icons.sunny,
+                                size: 100,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -112,35 +134,33 @@ class _WeatherScreenState extends State<WeatherScreen> {
                   ),
                   const SizedBox(height: 20),
                   const Text(
-                    'Weather Forecast',
+                    'Hourly Forecast',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 20),
-                  const SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        HourlyForecast(
-                            hour: '03:00',
-                            icon: Icons.cloud,
-                            temperature: '25 C'),
-                        HourlyForecast(
-                            hour: '03:00',
-                            icon: Icons.cloud,
-                            temperature: '25 C'),
-                        HourlyForecast(
-                            hour: '03:00',
-                            icon: Icons.cloud,
-                            temperature: '25 C'),
-                        HourlyForecast(
-                            hour: '03:00',
-                            icon: Icons.cloud,
-                            temperature: '25 C'),
-                        HourlyForecast(
-                            hour: '03:00',
-                            icon: Icons.cloud,
-                            temperature: '25 C'),
-                      ],
+                  SizedBox(
+                    height: 120,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: 8,
+                      itemBuilder: (context, index) {
+                        final hourlyWeatherData =
+                            snapshot.data!['list'][index + 1];
+                        final hourlyTemperature =
+                            kelvinToCelcius(hourlyWeatherData['main']['temp'])
+                                .toInt();
+                        final time =
+                            DateTime.parse(hourlyWeatherData['dt_txt']);
+                        final hourlySky =
+                            hourlyWeatherData['weather'][0]['main'];
+
+                        return HourlyForecast(
+                            hour: DateFormat.j().format(time),
+                            icon: hourlySky == 'Clouds' || hourlySky == 'Rain'
+                                ? Icons.cloud
+                                : Icons.sunny,
+                            temperature: '$hourlyTemperature° C');
+                      },
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -148,21 +168,23 @@ class _WeatherScreenState extends State<WeatherScreen> {
                     'Additional Information',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                   ),
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       AdditionalInformation(
                           icon: Icons.water_drop,
                           title: 'Humadity',
-                          value: '82%'),
+                          value: '${currentWeatherData['main']['humidity']}%'),
+                      AdditionalInformation(
+                          icon: Icons.speed,
+                          title: 'Wind Speed',
+                          value:
+                              '${currentWeatherData['wind']['speed'].toString()} km/h'),
                       AdditionalInformation(
                           icon: Icons.air,
-                          title: 'Wind Speed',
-                          value: '123.56'),
-                      AdditionalInformation(
-                          icon: Icons.sunny,
-                          title: 'UV Index',
-                          value: '123.56'),
+                          title: 'Pressure',
+                          value: currentWeatherData['main']['pressure']
+                              .toString()),
                     ],
                   )
                 ],
