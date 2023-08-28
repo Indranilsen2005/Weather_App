@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:weather_app/icons/weather_icons.dart';
 
 import 'package:weather_app/widgets/additional_information.dart';
 import 'package:weather_app/widgets/hourly_forecast.dart';
@@ -81,6 +82,18 @@ class _WeatherScreenState extends State<WeatherScreen> {
           final currentWeatherDescription =
               currentWeatherData['weather'][0]['description'];
           final currentSky = currentWeatherData['weather'][0]['main'];
+
+          final sunriseTimeData = DateTime.fromMillisecondsSinceEpoch(
+            snapshot.data!['city']['sunrise'] * 1000,
+            isUtc: true,
+          );
+          final sunsetTimeData = DateTime.fromMillisecondsSinceEpoch(
+            snapshot.data!['city']['sunset'] * 1000,
+            isUtc: true,
+          );
+
+          final sunrise = DateFormat.Hm().format(sunriseTimeData);
+          final sunset = DateFormat.Hm().format(sunsetTimeData);
 
           return SingleChildScrollView(
             child: Padding(
@@ -179,14 +192,29 @@ class _WeatherScreenState extends State<WeatherScreen> {
                           icon: Icons.speed,
                           title: 'Wind Speed',
                           value:
-                              '${currentWeatherData['wind']['speed'].toString()} km/h'),
+                              '${currentWeatherData['wind']['speed'].toString()} m/s'),
                       AdditionalInformation(
                           icon: Icons.air,
                           title: 'Pressure',
                           value: currentWeatherData['main']['pressure']
                               .toString()),
                     ],
-                  )
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      AdditionalInformation(
+                        title: 'Sunrise',
+                        value: '$sunrise am',
+                        icon: WeatherIcons.sunInv,
+                      ),
+                      AdditionalInformation(
+                        title: 'Sunset',
+                        value: '$sunset pm',
+                        icon: WeatherIcons.moonInv,
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
