@@ -116,12 +116,15 @@ class _WeatherScreenState extends State<WeatherScreen> {
               currentWeatherData['weather'][0]['description'];
           final currentSky = currentWeatherData['weather'][0]['icon'];
 
+          int sunriseTimeInEpoch = snapshot.data!['city']['sunrise'];
+          int sunsetTimeInEpoch = snapshot.data!['city']['sunset'];
+
           final sunriseTimeData = DateTime.fromMillisecondsSinceEpoch(
-            snapshot.data!['city']['sunrise'] * 1000,
+            (sunriseTimeInEpoch + 3600) * 1000,
             isUtc: true,
           );
           final sunsetTimeData = DateTime.fromMillisecondsSinceEpoch(
-            snapshot.data!['city']['sunset'] * 1000,
+            (sunsetTimeInEpoch + 3600) * 1000,
             isUtc: true,
           );
 
