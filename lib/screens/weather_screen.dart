@@ -3,8 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:weather_app/icons/weather_icons.dart';
 
+import 'package:weather_app/icons/weather_icons.dart';
 import 'package:weather_app/widgets/additional_information.dart';
 import 'package:weather_app/widgets/hourly_forecast.dart';
 import 'package:weather_app/secrets.dart';
@@ -49,14 +49,26 @@ class _WeatherScreenState extends State<WeatherScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 120, 140, 251),
       appBar: AppBar(
-        title: const Text('Weather App'),
+        backgroundColor: const Color.fromARGB(255, 120, 140, 251),
+        title: const Text(
+          'Weather App',
+          style: TextStyle(
+            fontSize: 25,
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         actions: [
           IconButton(
             onPressed: () {
               setState(() {});
             },
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(
+              Icons.refresh,
+              color: Colors.white,
+            ),
           ),
         ],
       ),
@@ -65,7 +77,9 @@ class _WeatherScreenState extends State<WeatherScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(
+                color: Colors.white,
+              ),
             );
           }
 
@@ -92,8 +106,8 @@ class _WeatherScreenState extends State<WeatherScreen> {
             isUtc: true,
           );
 
-          final sunrise = DateFormat.Hm().format(sunriseTimeData);
-          final sunset = DateFormat.Hm().format(sunsetTimeData);
+          final sunrise = DateFormat.jm().format(sunriseTimeData);
+          final sunset = DateFormat.jm().format(sunsetTimeData);
 
           return SingleChildScrollView(
             child: Padding(
@@ -103,14 +117,13 @@ class _WeatherScreenState extends State<WeatherScreen> {
                 children: [
                   const Text(
                     'London',
-                    style: TextStyle(fontSize: 35),
+                    style: TextStyle(fontSize: 30),
                   ),
                   const SizedBox(height: 10),
                   SizedBox(
                     height: 200,
                     width: double.infinity,
                     child: Card(
-                      elevation: 5,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
@@ -138,6 +151,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                                     ? Icons.cloud
                                     : Icons.sunny,
                                 size: 100,
+                                color: Colors.white,
                               ),
                             ),
                           ),
@@ -181,6 +195,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                     'Additional Information',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                   ),
+                  const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -196,21 +211,21 @@ class _WeatherScreenState extends State<WeatherScreen> {
                       AdditionalInformation(
                           icon: Icons.air,
                           title: 'Pressure',
-                          value: currentWeatherData['main']['pressure']
-                              .toString()),
+                          value:
+                              '${currentWeatherData['main']['pressure'].toString()} mBar'),
                     ],
                   ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       AdditionalInformation(
                         title: 'Sunrise',
-                        value: '$sunrise am',
+                        value: sunrise,
                         icon: WeatherIcons.sunInv,
                       ),
                       AdditionalInformation(
                         title: 'Sunset',
-                        value: '$sunset pm',
+                        value: sunset,
                         icon: WeatherIcons.moonInv,
                       ),
                     ],
