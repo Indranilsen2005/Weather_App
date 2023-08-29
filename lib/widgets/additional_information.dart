@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class AdditionalInformation extends StatelessWidget {
   const AdditionalInformation({
     super.key,
+    this.iconColor = Colors.white,
     required this.icon,
     required this.title,
     required this.value,
@@ -11,6 +12,7 @@ class AdditionalInformation extends StatelessWidget {
   final IconData icon;
   final String title;
   final String value;
+  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +25,8 @@ class AdditionalInformation extends StatelessWidget {
           children: [
             Icon(
               icon,
-              size: 60,
+              size: 50,
+              color: iconColor,
             ),
             Text(
               title,
@@ -34,7 +37,7 @@ class AdditionalInformation extends StatelessWidget {
             ),
             Text(
               value,
-              style: const TextStyle(fontSize: 16),
+              style: const TextStyle(fontSize: 18),
             ),
           ],
         ),

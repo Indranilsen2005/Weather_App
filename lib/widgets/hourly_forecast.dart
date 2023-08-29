@@ -4,19 +4,19 @@ class HourlyForecast extends StatelessWidget {
   const HourlyForecast({
     super.key,
     required this.hour,
-    required this.icon,
+    required this.iconId,
     required this.temperature,
   });
 
   final String hour;
-  final IconData icon;
+  final String iconId;
   final String temperature;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 110,
-      width: 110,
+      height: 120,
+      width: 120,
       child: Card(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -28,10 +28,16 @@ class HourlyForecast extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            Icon(icon, size: 35),
+            SizedBox(
+              height: 50,
+              width: 50,
+              child: Image.network(
+                'https://openweathermap.org/img/wn/$iconId@2x.png',
+              ),
+            ),
             Text(
               temperature,
-              style: const TextStyle(fontSize: 16),
+              style: const TextStyle(fontSize: 18),
             ),
           ],
         ),

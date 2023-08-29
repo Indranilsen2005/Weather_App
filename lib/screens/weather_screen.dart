@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -23,16 +22,11 @@ class _WeatherScreenState extends State<WeatherScreen> {
     getCurrentWeather();
   }
 
-  double kelvinToCelcius(double kelvin) {
-    final celcius = kelvin - 273;
-    return celcius;
-  }
-
   Future<Map<String, dynamic>> getCurrentWeather() async {
     try {
       final response = await http.get(
         Uri.parse(
-          'https://api.openweathermap.org/data/2.5/forecast?q=London,uk&APPID=$apiKey',
+          'https://api.openweathermap.org/data/2.5/forecast?q=London,uk&units=metric&APPID=$apiKey',
         ),
       );
       final responseData = jsonDecode(response.body);
@@ -58,6 +52,31 @@ class _WeatherScreenState extends State<WeatherScreen> {
             fontSize: 25,
             color: Colors.white,
             fontWeight: FontWeight.w600,
+          ),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.square(80),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: 1,
+              horizontal: 15,
+            ),
+            child: ListTile(
+              title: const Text(
+                'London',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 22,
+                ),
+              ),
+              leading: const Icon(Icons.search),
+              trailing: const Icon(Icons.location_city),
+              tileColor: Colors.white,
+              onTap: () {},
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           ),
         ),
         actions: [
@@ -95,7 +114,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
               currentWeatherData['main']['feels_like'];
           final currentWeatherDescription =
               currentWeatherData['weather'][0]['description'];
-          final currentSky = currentWeatherData['weather'][0]['main'];
+          final currentSky = currentWeatherData['weather'][0]['icon'];
 
           final sunriseTimeData = DateTime.fromMillisecondsSinceEpoch(
             snapshot.data!['city']['sunrise'] * 1000,
@@ -111,58 +130,61 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
           return SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'London',
-                    style: TextStyle(fontSize: 30),
-                  ),
-                  const SizedBox(height: 10),
                   SizedBox(
-                    height: 200,
+                    height: 205,
                     width: double.infinity,
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
-                          child: Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: ListTile(
-                              title: Text(
-                                '${kelvinToCelcius(currentTemperature).toInt()}°',
-                                style: const TextStyle(
-                                    fontSize: 90,
-                                    fontFamily: 'Times new roman'),
-                              ),
-                              subtitle: Text(
-                                'Feels like ${kelvinToCelcius(currentFeelsLikeTemperature).toInt()}°\n$currentWeatherDescription',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                ),
-                              ),
-                              trailing: Icon(
-                                currentSky == 'Clouds' || currentSky == 'Rain'
-                                    ? Icons.cloud
-                                    : Icons.sunny,
-                                size: 100,
-                                color: Colors.white,
+                    child: Row(
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${currentTemperature.toInt()}°',
+                              style: const TextStyle(
+                                fontSize: 110,
+                                fontFamily: 'Times new roman',
                               ),
                             ),
-                          ),
+                            Text(
+                              '\t\t\tFeels like ${currentFeelsLikeTemperature.toInt()}°',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
+                        const Spacer(),
+                        Column(
+                          children: [
+                            SizedBox(
+                              height: 180,
+                              width: 180,
+                              child: Image.network(
+                                'https://openweathermap.org/img/wn/$currentSky@2x.png',
+                                fit: BoxFit.fill,
+                              ),
+                            ),
+                            Text(
+                              '$currentWeatherDescription',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 20),
                   const Text(
                     'Hourly Forecast',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 20),
                   SizedBox(
@@ -174,18 +196,15 @@ class _WeatherScreenState extends State<WeatherScreen> {
                         final hourlyWeatherData =
                             snapshot.data!['list'][index + 1];
                         final hourlyTemperature =
-                            kelvinToCelcius(hourlyWeatherData['main']['temp'])
-                                .toInt();
+                            hourlyWeatherData['main']['temp'].toInt();
                         final time =
                             DateTime.parse(hourlyWeatherData['dt_txt']);
-                        final hourlySky =
-                            hourlyWeatherData['weather'][0]['main'];
+                        final hourlySkyIconId =
+                            hourlyWeatherData['weather'][0]['icon'];
 
                         return HourlyForecast(
                             hour: DateFormat.j().format(time),
-                            icon: hourlySky == 'Clouds' || hourlySky == 'Rain'
-                                ? Icons.cloud
-                                : Icons.sunny,
+                            iconId: hourlySkyIconId,
                             temperature: '$hourlyTemperature° C');
                       },
                     ),
@@ -193,7 +212,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                   const SizedBox(height: 20),
                   const Text(
                     'Additional Information',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 20),
                   Row(
@@ -201,15 +220,18 @@ class _WeatherScreenState extends State<WeatherScreen> {
                     children: [
                       AdditionalInformation(
                           icon: Icons.water_drop,
-                          title: 'Humadity',
+                          title: 'Humidity',
+                          iconColor: Colors.blue[200],
                           value: '${currentWeatherData['main']['humidity']}%'),
                       AdditionalInformation(
                           icon: Icons.speed,
                           title: 'Wind Speed',
+                          iconColor: Colors.red[500],
                           value:
                               '${currentWeatherData['wind']['speed'].toString()} m/s'),
                       AdditionalInformation(
                           icon: Icons.air,
+                          iconColor: Colors.grey[350],
                           title: 'Pressure',
                           value:
                               '${currentWeatherData['main']['pressure'].toString()} mBar'),
@@ -220,11 +242,13 @@ class _WeatherScreenState extends State<WeatherScreen> {
                     children: [
                       AdditionalInformation(
                         title: 'Sunrise',
+                        iconColor: Colors.yellow,
                         value: sunrise,
                         icon: WeatherIcons.sunInv,
                       ),
                       AdditionalInformation(
                         title: 'Sunset',
+                        iconColor: const Color.fromARGB(255, 9, 20, 82),
                         value: sunset,
                         icon: WeatherIcons.moonInv,
                       ),
